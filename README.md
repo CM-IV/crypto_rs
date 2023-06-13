@@ -2,7 +2,7 @@
 
 *DO NOT FORGET YOUR PASSWORD, I AM NOT RESPONSIBLE IF YOU DO!!!*
 
-A simple terminal program for Linux that encrypts/decrypts files via password.
+A simple terminal program for Linux that encrypts/decrypts files via password.  The encrypted/decrypted files are written to the user's `Downloads` folder.
 
 File Operation Menu --> Encrypt file --> Enter file path --> Enter password --> Profit
 
