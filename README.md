@@ -2,7 +2,7 @@
 
 *DO NOT FORGET YOUR PASSWORD, I AM NOT RESPONSIBLE IF YOU DO!!!*
 
-A simple terminal program for **Linux** that encrypts/decrypts files via password.  The encrypted/decrypted files are written to the user's `Downloads` folder.
+A simple terminal program for **Linux** that encrypts/decrypts files via password.  The encrypted/decrypted files are written to the user's `Downloads` folder.  Once the file is encrypted, you will see a `.age` file descriptor added to the end of the file in the `Downloads` folder.  This is the file you can backup to Google Drive, Deta Drive, Dropbox, etc.
 
 File Operation Menu --> Encrypt file --> Enter file path --> Enter password --> Profit
 
