@@ -4,6 +4,7 @@ use age::secrecy::Secret;
 use anyhow::Result;
 use inquire::required;
 use owo_colors::OwoColorize;
+use spinoff::{Spinner, spinners, Color};
 
 pub fn encrypt_file() -> Result<()> {
     
@@ -15,7 +16,11 @@ pub fn encrypt_file() -> Result<()> {
     let password = inquire::Password::new("Enter your password")
         .with_validator(required!())
         .with_help_message("If you forget this, your file is gone FOREVER")
+        .without_confirmation()
         .prompt()?;
+
+    let msg = "Encrypting...".yellow().to_string();
+    let spinner = Spinner::new(spinners::Dots, msg, Color::Yellow);
 
     let f = File::open(file.as_path())?;
     let mut reader = BufReader::new(f);
@@ -40,6 +45,8 @@ pub fn encrypt_file() -> Result<()> {
 
     writer.write_all(encrypted.as_slice())?;
 
+    spinner.success("Done!");
+
     println!("{}", "\nFile successfully encrypted!\n".green());
 
     Ok(())
@@ -56,7 +63,11 @@ pub fn decrypt_file() -> Result<()> {
     let password = inquire::Password::new("Enter your password")
         .with_validator(required!())
         .with_help_message("If you forget this, your file is gone FOREVER")
+        .without_confirmation()
         .prompt()?;
+
+    let msg = "Decrypting...".yellow().to_string();
+    let spinner = Spinner::new(spinners::Dots, msg, Color::Yellow);
 
     let f = File::open(file.as_path())?;
     let mut reader = BufReader::new(f);
@@ -87,6 +98,8 @@ pub fn decrypt_file() -> Result<()> {
     let mut writer = File::create(&dest)?;
 
     writer.write_all(&decrypted)?;
+
+    spinner.success("Done!");
 
     println!("{}", "\nFile successfully decrypted!\n".green());
 

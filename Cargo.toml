@@ -11,6 +11,7 @@ anyhow = "1.0.71"
 dirs = "5.0.1"
 inquire = "0.6.2"
 owo-colors = "3.5.0"
+spinoff = { version = "0.7.0", features = ["dots"] }
 
 
 # optimize for size
