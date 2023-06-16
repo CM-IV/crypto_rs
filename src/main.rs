@@ -1,5 +1,5 @@
 use owo_colors::OwoColorize;
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use inquire::{
     ui::{Attributes, Color, RenderConfig, StyleSheet},
     Select,
@@ -16,6 +16,12 @@ fn get_render_cfg() -> RenderConfig<'static> {
         help_message: StyleSheet::new().with_fg(Color::LightCyan),
         ..Default::default()
     }
+}
+
+// Define an enum for menu items
+enum MainMenuItem {
+    FileOperations,
+    Exit,
 }
 
 struct MainMenuBuilder<'a> {
@@ -36,12 +42,18 @@ impl<'a> MainMenuBuilder<'a> {
         self
     }
 
-    fn build(self) -> Result<&'a str> {
+    fn build(self) -> Result<MainMenuItem> {
         let choice = Select::new("What would you like to do?", self.items.to_vec())
             .with_help_message(self.help_message.unwrap_or_default())
             .prompt()?;
 
-        Ok(choice)
+        let selected_item = match choice {
+                "File Operations" => MainMenuItem::FileOperations,
+                "Exit" => MainMenuItem::Exit,
+                _ => unreachable!(),
+            };
+
+        Ok(selected_item)
     }
 }
 
@@ -84,12 +96,11 @@ fn main() -> Result<()> {
         .with_help_message("Main menu")
         .build()?
         {
-            "File Operations" => cli::file_menu::file_operations()?,
-            "Exit" => {
+            MainMenuItem::FileOperations => cli::file_menu::file_operations()?,
+            MainMenuItem::Exit => {
                 println!("{}", "\nGoodbye!\n".purple());
                 break;
-            }
-            err => return Err(anyhow!("{}", err)),
+            },
         }
     }
 

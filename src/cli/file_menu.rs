@@ -1,8 +1,15 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use inquire::Select;
 
 
 use crate::controllers::encryption;
+
+// Define an enum for file items
+enum FileMenuItem {
+    Encrypt,
+    Decrypt,
+    GoBack
+}
 
 
 struct FileMenuBuilder<'a> {
@@ -23,15 +30,22 @@ impl<'a> FileMenuBuilder<'a> {
         self
     }
 
-    fn build(self) -> Result<&'a str> {
+    fn build(self) -> Result<FileMenuItem> {
         let choice = Select::new(
             "Which file operation would you like to perform?",
             self.items.to_vec(),
         )
-        .with_help_message(self.help_message.unwrap_or_default())
-        .prompt()?;
+            .with_help_message(self.help_message.unwrap_or_default())
+            .prompt()?;
 
-        Ok(choice)
+        let selected_item = match choice {
+            "Encrypt a file" => FileMenuItem::Encrypt,
+            "Decrypt a file" => FileMenuItem::Decrypt,
+            "Go back" => FileMenuItem::GoBack,
+            _ => unreachable!(),
+        };
+
+        Ok(selected_item)
     }
 }
 
@@ -46,12 +60,11 @@ pub fn file_operations() -> Result<()> {
         .with_help_message("File menu")
         .build()?
         {
-            "Encrypt a file" => encryption::encrypt_file()?,
-            "Decrypt a file" => encryption::decrypt_file()?,
-            "Go back" => {
+            FileMenuItem::Encrypt => encryption::encrypt_file()?,
+            FileMenuItem::Decrypt => encryption::decrypt_file()?,
+            FileMenuItem::GoBack => {
                 break;
-            }
-            err => return Err(anyhow!("{}", err)),
+            },
         }
     }
     
