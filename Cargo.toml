@@ -9,7 +9,9 @@ edition = "2021"
 age = "0.9.2"
 anyhow = "1.0.71"
 dirs = "5.0.1"
-inquire = "0.6.2"
+# latest inquire release has a password confirmation bug
+# inquire = "0.6.2"
+inquire = { git = "https://github.com/mikaelmello/inquire", rev = "3efb148c5cb6523d9cfb1cd07a0d8c093b9ed165" }
 owo-colors = "3.5.0"
 spinoff = { version = "0.7.0", features = ["dots"] }
 

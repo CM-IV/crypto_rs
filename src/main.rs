@@ -8,7 +8,7 @@ use inquire::{
 pub mod cli;
 pub mod controllers;
 
-fn get_render_cfg() -> RenderConfig {
+fn get_render_cfg() -> RenderConfig<'static> {
     RenderConfig {
         answer: StyleSheet::new()
             .with_attr(Attributes::ITALIC)

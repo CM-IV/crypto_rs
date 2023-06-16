@@ -16,11 +16,9 @@ pub fn encrypt_file() -> Result<()> {
     let password = inquire::Password::new("Enter your password")
         .with_validator(required!())
         .with_help_message("If you forget this, your file is gone FOREVER")
-        .without_confirmation()
         .prompt()?;
 
-    let msg = "Encrypting...".yellow().to_string();
-    let spinner = Spinner::new(spinners::Dots, msg, Color::Yellow);
+    let spinner = Spinner::new(spinners::Dots, "Encrypting...".yellow().to_string(), Color::Yellow);
 
     let f = File::open(file.as_path())?;
     let mut reader = BufReader::new(f);
@@ -63,11 +61,9 @@ pub fn decrypt_file() -> Result<()> {
     let password = inquire::Password::new("Enter your password")
         .with_validator(required!())
         .with_help_message("If you forget this, your file is gone FOREVER")
-        .without_confirmation()
         .prompt()?;
 
-    let msg = "Decrypting...".yellow().to_string();
-    let spinner = Spinner::new(spinners::Dots, msg, Color::Yellow);
+    let spinner = Spinner::new(spinners::Dots, "Decrypting...".yellow().to_string(), Color::Yellow);
 
     let f = File::open(file.as_path())?;
     let mut reader = BufReader::new(f);
