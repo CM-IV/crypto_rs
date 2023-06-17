@@ -1,106 +1,54 @@
+use std::path::PathBuf;
+
+use controllers::encryption::{encrypt_file, decrypt_file};
 use owo_colors::OwoColorize;
 use anyhow::Result;
-use inquire::{
-    ui::{Attributes, Color, RenderConfig, StyleSheet},
-    Select,
-};
+use clap::Parser;
 
-pub mod cli;
 pub mod controllers;
 
-fn get_render_cfg() -> RenderConfig<'static> {
-    RenderConfig {
-        answer: StyleSheet::new()
-            .with_attr(Attributes::ITALIC)
-            .with_fg(Color::LightCyan),
-        help_message: StyleSheet::new().with_fg(Color::LightCyan),
-        ..Default::default()
-    }
+#[derive(Parser)]
+#[clap(author = "CM-IV <chuck@civdev.xyz>", version, about)]
+/// File encryption software
+struct Arguments {
+    /// Path to the file
+    file: PathBuf,
+    /// Password to decrypt a file
+    #[arg(short, long)]
+    pass: Option<String>,
+    /// Encrypt a file (a password is generated for you)
+    #[arg(group = "flag")]
+    #[arg(short, long)]
+    encrypt: bool,
+    /// Decrypt a file
+    #[arg(group = "flag")]
+    #[arg(short, long)]
+    decrypt: bool
 }
 
-// Define an enum for menu items
-enum MainMenuItem {
-    FileOperations,
-    Exit,
-}
-
-struct MainMenuBuilder<'a> {
-    items: &'a [&'a str],
-    help_message: Option<&'a str>,
-}
-
-impl<'a> MainMenuBuilder<'a> {
-    fn new(items: &'a [&'a str]) -> Self {
-        Self {
-            items,
-            help_message: None,
-        }
-    }
-
-    fn with_help_message(mut self, message: &'a str) -> Self {
-        self.help_message = Some(message);
-        self
-    }
-
-    fn build(self) -> Result<MainMenuItem> {
-        let choice = Select::new("What would you like to do?", self.items.to_vec())
-            .with_help_message(self.help_message.unwrap_or_default())
-            .prompt()?;
-
-        let selected_item = match choice {
-                "File Operations" => MainMenuItem::FileOperations,
-                "Exit" => MainMenuItem::Exit,
-                _ => unreachable!(),
-            };
-
-        Ok(selected_item)
-    }
-}
 
 fn main() -> Result<()> {
-    inquire::set_global_render_config(get_render_cfg());
 
-    let greet = r#"
-     .--------.
-    / .------. \
-   / /        \ \
-   | |        | |
-  _| |________| |_
-.' |_|        |_| '.
-'._____ ____ _____.'
-|     .'____'.     |
-'.__.'.'    '.'.__.'
-'.__  |      |  __.'
-|   '.'.____.'.'   |
-'.____'.____.'____.'LGB
-'.________________.'
-                         __                       
-  ____________  ______  / /_____        __________
- / ___/ ___/ / / / __ \/ __/ __ \______/ ___/ ___/
-/ /__/ /  / /_/ / /_/ / /_/ /_/ /_____/ /  (__  ) 
-\___/_/   \__, / .___/\__/\____/     /_/  /____/  
-         /____/_/                                 
-                                                                       
-    "#;
+    let args = Arguments::parse();
 
-    println!("{}", greet.red());
-    println!("File Encryption Software");
-    println!("By CM-IV <chuck@civdev.xyz>\n");
+    let file = args.file;
+    let pass = args.pass;
 
+    if !file.is_file() {
+        println!("{}", "\nThe path must lead to a file\n".red());
+        return Ok(());
+    }
 
-    loop {
-        match MainMenuBuilder::new(&[
-            "File Operations",
-            "Exit",
-        ])
-        .with_help_message("Main menu")
-        .build()?
-        {
-            MainMenuItem::FileOperations => cli::file_menu::file_operations()?,
-            MainMenuItem::Exit => {
-                println!("{}", "\nGoodbye!\n".purple());
-                break;
-            },
+    if args.encrypt {
+        encrypt_file(&file)?;
+    }
+
+    if args.decrypt {
+        if let Some(i) = pass {
+            decrypt_file(&file, i)?;
+        } else {
+            println!("{}", "\nA password must be provided to decrypt the file!\n".red());
+            return Ok(());
         }
     }
 

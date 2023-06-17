@@ -2,45 +2,38 @@ use std::{path::PathBuf, fs::File, io::{BufReader, Read, Write}};
 
 use age::secrecy::Secret;
 use anyhow::Result;
-use inquire::required;
 use owo_colors::OwoColorize;
-use rand::Rng;
+use rand::{distributions::Uniform, prelude::Distribution};
 use spinoff::{Spinner, spinners, Color};
 
-const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-                            abcdefghijklmnopqrstuvwxyz\
-                            0123456789)(*&^%$#@!~";
+const WORDLIST: &str = include_str!("../assets/wordlist.txt");
         
-const PASSWORD_LEN: usize = 30;
+const PASSWORD_LEN: usize = 10;
 
-pub fn encrypt_file() -> Result<()> {
-    
-    let file: PathBuf = inquire::Text::new("Enter the path to the file for encryption")
-        .with_validator(required!())
-        .with_help_message("Enter the path to the file you want encrypted")
-        .prompt()?.into();
+pub fn encrypt_file(file: &PathBuf) -> Result<()> {
 
-    if !file.is_file() {
-        println!("{}", "\nThe file does not exist\n".red());
-        return Ok(());
-    }
+    // Algorithm to generate random password phrase
 
-    let mut password = inquire::Password::new("Enter your password")
-        .with_help_message("Leave empty to have one generated for you")
-        .prompt()?;
+    let mut rng = rand::thread_rng();
 
-    if password.is_empty() {
-        let mut rng = rand::thread_rng();
+    let between = Uniform::from(0..2048);
 
-        password = (0..PASSWORD_LEN)
-            .map(|_| {
-                let idx = rng.gen_range(0..CHARSET.len());
-                CHARSET[idx] as char
-            })
-            .collect();
+    let password: String = (0..PASSWORD_LEN)
+        .map(|_| {
+            WORDLIST
+                .lines()
+                .nth(between.sample(&mut rng))
+                .expect("index in range")
+        })
+        .fold(String::new(), | acc, p | {
+            if acc.is_empty() {
+                acc + p
+            } else {
+                acc + "-" + p
+            }
+        });
 
-        println!("{}{}{}", "Your generated password is: ".yellow(), &password.yellow(), "\n")
-    }
+    println!("{}{}{}", "Your generated password is: ".yellow(), &password.yellow(), "\n");
 
     let spinner = Spinner::new(spinners::Dots, "Encrypting...".yellow().to_string(), Color::Yellow);
 
@@ -75,22 +68,7 @@ pub fn encrypt_file() -> Result<()> {
 }
 
 
-pub fn decrypt_file() -> Result<()> {
-    
-    let file: PathBuf = inquire::Text::new("Enter the path to the file for decryption")
-        .with_validator(required!())
-        .with_help_message("Enter the path to the file you want decrypted")
-        .prompt()?.into();
-
-    if !file.is_file() {
-            println!("{}", "\nThe file does not exist\n".red());
-            return Ok(());
-        }
-
-    let password = inquire::Password::new("Enter your password")
-        .with_validator(required!())
-        .with_help_message("If you forget this, your file is gone FOREVER")
-        .prompt()?;
+pub fn decrypt_file(file: &PathBuf, pass: String) -> Result<()> {
 
     let spinner = Spinner::new(spinners::Dots, "Decrypting...".yellow().to_string(), Color::Yellow);
 
@@ -106,7 +84,7 @@ pub fn decrypt_file() -> Result<()> {
         };
     
         let mut decrypted = vec![];
-        if let Ok(mut reader) = decryptor.decrypt(&Secret::new(password), None) {
+        if let Ok(mut reader) = decryptor.decrypt(&Secret::new(pass), None) {
             reader.read_to_end(&mut decrypted)?;
         } else {
             println!("{}", "\nYour password is incorrect!\n".red());
