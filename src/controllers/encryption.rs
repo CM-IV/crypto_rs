@@ -4,29 +4,53 @@ use age::secrecy::Secret;
 use anyhow::Result;
 use inquire::required;
 use owo_colors::OwoColorize;
+use rand::Rng;
 use spinoff::{Spinner, spinners, Color};
 
 pub fn encrypt_file() -> Result<()> {
+
+    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+                            abcdefghijklmnopqrstuvwxyz\
+                            0123456789)(*&^%$#@!~";
+        
+    const PASSWORD_LEN: usize = 30;
     
     let file: PathBuf = inquire::Text::new("Enter the path to the file for encryption")
         .with_validator(required!())
         .with_help_message("Enter the path to the file you want encrypted")
         .prompt()?.into();
 
-    let password = inquire::Password::new("Enter your password")
-        .with_validator(required!())
-        .with_help_message("If you forget this, your file is gone FOREVER")
+    if !file.exists() {
+        println!("{}", "\nThe file does not exist\n".red());
+        return Ok(());
+    }
+
+    let mut password = inquire::Password::new("Enter your password")
+        .with_help_message("Leave empty to have one generated for you")
         .prompt()?;
 
+    if password.is_empty() {
+        let mut rng = rand::thread_rng();
+
+        password = (0..PASSWORD_LEN)
+            .map(|_| {
+                let idx = rng.gen_range(0..CHARSET.len());
+                CHARSET[idx] as char
+            })
+            .collect();
+
+        println!("{}{}{}", "Your generated password is: ".yellow(), &password.yellow(), "\n")
+    }
+
     let spinner = Spinner::new(spinners::Dots, "Encrypting...".yellow().to_string(), Color::Yellow);
+
+    let encrypted = {
+        let encryptor = age::Encryptor::with_user_passphrase(Secret::new(password));
 
     let f = File::open(file.as_path())?;
     let mut reader = BufReader::new(f);
     let mut buffer = Vec::new();
     reader.read_to_end(&mut buffer)?;
-
-    let encrypted = {
-        let encryptor = age::Encryptor::with_user_passphrase(Secret::new(password));
     
         let mut encrypted = vec![];
         let mut writer = encryptor.wrap_output(&mut encrypted)?;
@@ -43,7 +67,7 @@ pub fn encrypt_file() -> Result<()> {
 
     writer.write_all(encrypted.as_slice())?;
 
-    spinner.success("Done!");
+    spinner.stop();
 
     println!("{}", "\nFile successfully encrypted!\n".green());
 
@@ -57,6 +81,11 @@ pub fn decrypt_file() -> Result<()> {
         .with_validator(required!())
         .with_help_message("Enter the path to the file you want decrypted")
         .prompt()?.into();
+
+    if !file.exists() {
+            println!("{}", "\nThe file does not exist\n".red());
+            return Ok(());
+        }
 
     let password = inquire::Password::new("Enter your password")
         .with_validator(required!())
@@ -95,7 +124,7 @@ pub fn decrypt_file() -> Result<()> {
 
     writer.write_all(&decrypted)?;
 
-    spinner.success("Done!");
+    spinner.stop();
 
     println!("{}", "\nFile successfully decrypted!\n".green());
 

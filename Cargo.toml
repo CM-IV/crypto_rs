@@ -13,6 +13,7 @@ dirs = "5.0.1"
 # inquire = "0.6.2"
 inquire = { git = "https://github.com/mikaelmello/inquire", rev = "3efb148c5cb6523d9cfb1cd07a0d8c093b9ed165" }
 owo-colors = "3.5.0"
+rand = "0.8.5"
 spinoff = { version = "0.7.0", features = ["dots"] }
 
 

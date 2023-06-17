@@ -236,6 +236,7 @@ dependencies = [
  "dirs",
  "inquire",
  "owo-colors",
+ "rand 0.8.5",
  "spinoff",
 ]
 
