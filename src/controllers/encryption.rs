@@ -7,13 +7,13 @@ use owo_colors::OwoColorize;
 use rand::Rng;
 use spinoff::{Spinner, spinners, Color};
 
-pub fn encrypt_file() -> Result<()> {
-
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                             abcdefghijklmnopqrstuvwxyz\
                             0123456789)(*&^%$#@!~";
         
-    const PASSWORD_LEN: usize = 30;
+const PASSWORD_LEN: usize = 30;
+
+pub fn encrypt_file() -> Result<()> {
     
     let file: PathBuf = inquire::Text::new("Enter the path to the file for encryption")
         .with_validator(required!())
