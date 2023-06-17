@@ -20,7 +20,7 @@ pub fn encrypt_file() -> Result<()> {
         .with_help_message("Enter the path to the file you want encrypted")
         .prompt()?.into();
 
-    if !file.exists() {
+    if !file.is_file() {
         println!("{}", "\nThe file does not exist\n".red());
         return Ok(());
     }
@@ -82,7 +82,7 @@ pub fn decrypt_file() -> Result<()> {
         .with_help_message("Enter the path to the file you want decrypted")
         .prompt()?.into();
 
-    if !file.exists() {
+    if !file.is_file() {
             println!("{}", "\nThe file does not exist\n".red());
             return Ok(());
         }
