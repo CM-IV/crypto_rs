@@ -11,7 +11,6 @@ const WORDLIST: &str = include_str!("../assets/wordlist.txt");
 const PASSWORD_LEN: usize = 10;
 
 pub fn encrypt_file(file: &PathBuf) -> Result<()> {
-
     // Algorithm to generate random password phrase
 
     let mut rng = rand::thread_rng();
@@ -41,6 +40,7 @@ pub fn encrypt_file(file: &PathBuf) -> Result<()> {
         let encryptor = age::Encryptor::with_user_passphrase(Secret::new(password));
 
     let f = File::open(file.as_path())?;
+
     let mut reader = BufReader::new(f);
     let mut buffer = Vec::new();
     reader.read_to_end(&mut buffer)?;
@@ -73,17 +73,19 @@ pub fn decrypt_file(file: &PathBuf, pass: String) -> Result<()> {
     let spinner = Spinner::new(spinners::Dots, "Decrypting...".yellow().to_string(), Color::Yellow);
 
     let f = File::open(file.as_path())?;
+
     let mut reader = BufReader::new(f);
     let mut buffer = Vec::new();
     reader.read_to_end(&mut buffer)?;
 
     let decrypted = {
-        let decryptor = match age::Decryptor::new(&buffer[..])? {
+        let decryptor = match age::Decryptor::new_buffered(&buffer[..])? {
             age::Decryptor::Passphrase(d) => d,
             _ => unreachable!(),
         };
     
         let mut decrypted = vec![];
+
         if let Ok(mut reader) = decryptor.decrypt(&Secret::new(pass), None) {
             reader.read_to_end(&mut decrypted)?;
         } else {

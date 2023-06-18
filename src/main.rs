@@ -8,8 +8,10 @@ use clap::Parser;
 pub mod controllers;
 
 #[derive(Parser)]
-#[clap(author = "CM-IV <chuck@civdev.xyz>", version, about)]
-/// File encryption software
+#[clap(author = "CM-IV <chuck@civdev.xyz>", version, long_about = r#"
+File encryption software
+By CM-IV <chuck@civdev.xyz>
+"#)]
 struct Arguments {
     /// Path to the file
     file: PathBuf,
