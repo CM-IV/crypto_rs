@@ -292,6 +292,7 @@ dependencies = [
  "camino",
  "clap",
  "dirs",
+ "hmac-sha512",
  "owo-colors",
  "rand 0.8.5",
 ]
@@ -515,6 +516,12 @@ checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
  "digest 0.10.7",
 ]
+
+[[package]]
+name = "hmac-sha512"
+version = "1.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4ce1f4656bae589a3fab938f9f09bf58645b7ed01a2c5f8a3c238e01a4ef78a"
 
 [[package]]
 name = "i18n-config"

@@ -41,6 +41,11 @@ enum Command {
         /// The path to the file
         path: Utf8PathBuf
     },
+    /// Use SHA512 to generate a hash for the unencrypted file
+    Hash {
+        /// The path to the file for SHA512 hash
+        path: Utf8PathBuf
+    }
 }
 
 impl CryptoRS {
@@ -87,7 +92,7 @@ impl CryptoRS {
             let mut buffer = Vec::new();
             reader.read_to_end(&mut buffer)?;
 
-            println!("{}", "\nEncrypting...".yellow());
+            println!("{}", "Encrypting...".yellow());
 
             let mut encrypted = vec![];
             let mut writer = encryptor.wrap_output(&mut encrypted)?;
@@ -158,6 +163,24 @@ impl CryptoRS {
     
         Ok(())
     }
+    fn gen_file_hash(file: &Utf8PathBuf) -> Result<()> {
+        let f = File::open(file.as_path())?;
+    
+        let mut reader = BufReader::new(f);
+        let mut buffer = Vec::new();
+        reader.read_to_end(&mut buffer)?;
+
+        let slice = buffer.as_slice();
+
+        let hash_bytes = hmac_sha512::Hash::hash(slice);
+
+        let hex_chars: Vec<String> = hash_bytes.iter().map(|byte| format!("{:02x}", byte)).collect();
+        let hash_str = hex_chars.join("");
+
+        println!("{}{}", "SHA512: ", hash_str.green());
+        
+        Ok(())
+    }
     pub fn exec(self) -> Result<()> {
         match self.command {
             Command::Encrypt { path } => {
@@ -191,7 +214,15 @@ impl CryptoRS {
                         }
                     }
                 }
-            }
+            },
+            Command::Hash { path } => {
+                if !path.is_file() {
+                    println!("{}", "\nYou cannot use two commands at once and the path must lead to a file\n".red());
+                    return Ok(());
+                }
+
+                Self::gen_file_hash(&path)?;
+            },
         }
 
         Ok(())

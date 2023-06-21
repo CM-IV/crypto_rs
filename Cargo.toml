@@ -13,6 +13,7 @@ owo-colors = "3.5.0"
 rand = "0.8.5"
 clap = { version = "4.3.5", features = ["derive"] }
 camino = "1.1.4"
+hmac-sha512 = "1.1.5"
 
 
 # optimize for size
