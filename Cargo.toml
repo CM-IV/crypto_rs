@@ -1,5 +1,5 @@
 [package]
-name = "crypto-rs"
+name = "crypto_rs"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,8 +11,8 @@ anyhow = "1.0.71"
 dirs = "5.0.1"
 owo-colors = "3.5.0"
 rand = "0.8.5"
-spinoff = { version = "0.7.0", features = ["dots"] }
-clap = { version = "4.3.4", features = ["derive"] }
+clap = { version = "4.3.5", features = ["derive"] }
+camino = "1.1.4"
 
 
 # optimize for size
