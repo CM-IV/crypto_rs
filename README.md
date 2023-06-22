@@ -13,4 +13,4 @@ This branch of the repository uses the `clap` crate, so instead of a terminal UI
 3. Run `RUSTFLAGS="-C target-cpu=native" cargo build --release` (or just `cargo build --release`)
 4. Your executable should be in the `/target/release` directory
 
-5. ![image](https://github.com/CM-IV/crypto_rs/assets/44551614/9b1e4f81-61cb-41c1-8aaa-8e6ce935f6fb)
+![image](https://github.com/CM-IV/crypto_rs/assets/44551614/9b1e4f81-61cb-41c1-8aaa-8e6ce935f6fb)
