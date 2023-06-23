@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use clap::Parser;
 use anyhow::Result;
 use crypto_rs::CryptoRS;

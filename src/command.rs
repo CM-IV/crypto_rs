@@ -73,10 +73,9 @@ impl CryptoRS {
             });
 
         println!(
-            "{}{}{}",
+            "\n{}{}\n",
             "Your generated password is: ".yellow(),
-            &password.yellow(),
-            "\n"
+            &password.yellow()
         );
 
         Ok(password)
@@ -109,7 +108,7 @@ impl CryptoRS {
             file.file_name().unwrap()
         );
 
-        let mut writer = File::create(&dest)?;
+        let mut writer = File::create(dest)?;
 
         writer.write_all(encrypted.as_slice())?;
 
@@ -155,7 +154,7 @@ impl CryptoRS {
                 .unwrap()
         );
     
-        let mut writer = File::create(&dest)?;
+        let mut writer = File::create(dest)?;
     
         writer.write_all(&decrypted)?;
     
@@ -177,7 +176,7 @@ impl CryptoRS {
         let hex_chars: Vec<String> = hash_bytes.iter().map(|byte| format!("{:02x}", byte)).collect();
         let hash_str = hex_chars.join("");
 
-        println!("{}{}", "SHA512: ", hash_str.green());
+        println!("\nSHA512: {}", hash_str.green());
         
         Ok(())
     }
@@ -208,7 +207,7 @@ impl CryptoRS {
                         return Ok(());
                     },
                     Err(err) => {
-                        if let Ok(_) = err.downcast::<DecryptError>() {
+                        if err.downcast::<DecryptError>().is_ok() {
                             println!("{}", "\nAn error occured during decryption, is the file a valid '.age' file?\n".red());
                             return Ok(());
                         }
