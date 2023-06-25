@@ -85,21 +85,21 @@ impl MyDialog {
     }
 }
 
-fn get_file() -> Utf8PathBuf {
+fn get_file() -> Option<Utf8PathBuf> {
     let mut dialog = dialog::NativeFileChooser::new(dialog::NativeFileChooserType::BrowseFile);
     dialog.show();
     let binding = dialog.filename();
     let file = Utf8PathBuf::from_path_buf(binding).expect("couldn't get Utf8PathBuf of file");
-    file
+    Some(file)
 }
 
-fn get_age_file() -> Utf8PathBuf {
+fn get_age_file() -> Option<Utf8PathBuf> {
     let mut dialog = dialog::NativeFileChooser::new(dialog::NativeFileChooserType::BrowseFile);
     dialog.set_filter("*.{age}");
     dialog.show();
     let binding = dialog.filename();
     let file = Utf8PathBuf::from_path_buf(binding).expect("couldn't get Utf8PathBuf of file");
-    file
+    Some(file)
 }
 
 fn gen_password() -> String {
@@ -238,7 +238,7 @@ fn gen_file_hash(file: &Utf8PathBuf) -> Result<()> {
     
     Ok(())
 }
-fn draw_gallery() {
+fn draw_gallery() -> Result<()> {
     let tab = Tabs::new(10, 10, 500 - 20, 450 - 20, "");
 
     let grp1 = Group::new(10, 35, 500 - 20, 450 - 45, "Encrypt\t\t");
@@ -250,10 +250,12 @@ fn draw_gallery() {
         .with_label("Select file");
 
     btn.set_callback(|_| {
-        let file = get_file();
-        let pass = gen_password();
-
-        encrypt_file(&file, pass).unwrap();
+        if let Some(file) = get_file() {
+            let pass = gen_password();
+            if let Err(_) = encrypt_file(&file, pass) {
+                return;
+            }
+        }
     });
 
     pack.end();
@@ -271,11 +273,14 @@ fn draw_gallery() {
         .with_label("Select file");
 
     picker.set_callback(move |_| {
-        let file = get_age_file();
-        let pass = input.value();
-        input.set_value("");
+        if let Some(file) = get_age_file() {
+            let pass = input.value();
+            input.set_value("");
+            if let Err(_) = decrypt_file(&file, pass) {
+                return;
+            }
+        };
 
-        decrypt_file(&file, pass).unwrap();
     });
 
     pack.end();
@@ -289,9 +294,12 @@ fn draw_gallery() {
         .with_label("Select file");
 
     hash_file.set_callback(|_| {
-        let file = get_file();
+        if let Some(file) = get_file() {
+            if let Err(_) = gen_file_hash(&file) {
+                return;
+            };
+        };
 
-        gen_file_hash(&file).unwrap();
     });
 
     pack.end();
@@ -300,9 +308,11 @@ fn draw_gallery() {
     let grp4 = Group::new(10, 35, 500 - 40, 450 - 0, "FAQ\t\t");
     grp4.end();
     tab.end();
+
+    Ok(())
 }
 
-fn main() {
+fn main() -> Result<()> {
     let app = app::App::default().with_scheme(app::Scheme::Gtk);
     app::background(221, 221, 221);
 
@@ -311,11 +321,13 @@ fn main() {
         .with_label("crypto_rs")
         .center_screen();
 
-    draw_gallery();
+    draw_gallery()?;
 
     wind.make_resizable(true);
     wind.end();
     wind.show();
 
-    app.run().unwrap();
+    app.run()?;
+
+    Ok(())
 }
