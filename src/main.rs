@@ -19,8 +19,8 @@ pub struct MyDialog {
     out: output::Output,
 }
 
-impl MyDialog {
-    pub fn default(val: String) -> Self {
+impl Default for MyDialog {
+    fn default() -> Self {
         let mut win = Window::default()
             .with_size(500, 100)
             .with_label("Success!");
@@ -32,7 +32,6 @@ impl MyDialog {
             .with_type(group::PackType::Horizontal);
         pack.set_spacing(20);
         let mut out = output::Output::default().with_size(300, 0);
-        out.set_value(&val);
         out.set_frame(FrameType::FlatBox);
         let mut ok = Button::default().with_size(80, 0).with_label("Ok");
         pack.end();
@@ -50,7 +49,10 @@ impl MyDialog {
         }
         Self { out }
     }
-    pub fn hash_dialog(val: String) -> Self {
+}
+
+impl MyDialog {
+    pub fn txt_dialog(val: String) -> Self {
         let mut win = Window::default()
             .with_size(600, 100)
             .with_label("Success!");
@@ -158,7 +160,7 @@ fn encrypt_file(file: &Utf8PathBuf, pass: String) -> Result<()> {
 
     match writer.write_all(encrypted.as_slice()) {
         Ok(_) => {
-            MyDialog::default(cloned_pass);
+            MyDialog::txt_dialog(cloned_pass);
         },
         Err(_) => {
             dialog::alert_default("There was an error!");
@@ -234,7 +236,7 @@ fn gen_file_hash(file: &Utf8PathBuf) -> Result<()> {
     let hex_chars: Vec<String> = hash_bytes.iter().map(|byte| format!("{:02x}", byte)).collect();
     let hash_str = hex_chars.join("");
 
-    MyDialog::hash_dialog(hash_str);
+    MyDialog::txt_dialog(hash_str);
     
     Ok(())
 }
