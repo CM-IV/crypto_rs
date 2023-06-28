@@ -240,11 +240,11 @@ fn gen_file_hash(file: &Utf8PathBuf) -> Result<()> {
     Ok(())
 }
 fn draw_gallery() -> Result<()> {
-    let tab = Tabs::new(10, 10, 500 - 20, 450 - 20, "");
+    let tab = Tabs::new(10, 10, 700 - 20, 450 - 20, "");
 
-    let grp1 = Group::new(10, 35, 500 - 20, 450 - 45, "Encrypt\t\t");
+    let grp1 = Group::new(10, 35, 700 - 20, 450 - 45, "Encrypt\t\t");
 
-    let mut pack = Pack::new(170, 200, 150, 450 - 45, None);
+    let mut pack = Pack::new(275, 200, 150, 450 - 45, None);
     pack.set_spacing(10);
     let mut btn = Button::default()
         .with_size(80, 30)
@@ -264,8 +264,8 @@ fn draw_gallery() -> Result<()> {
     pack.end();
     grp1.end();
 
-    let grp2 = Group::new(10, 35, 500 - 20, 450 - 25, "Decrypt\t\t");
-    let mut pack = Pack::new(120, 150, 250, 450 - 45, None);
+    let grp2 = Group::new(10, 35, 700 - 20, 450 - 25, "Decrypt\t\t");
+    let mut pack = Pack::new(215, 150, 250, 450 - 45, None);
     pack.set_spacing(10);
     let flex = group::Flex::default().with_size(150, 100).column().center_of_parent();
     frame::Frame::default().with_label("Enter password");
@@ -291,8 +291,8 @@ fn draw_gallery() -> Result<()> {
     pack.end();
     grp2.end();
 
-    let grp3 = Group::new(10, 35, 500 - 20, 450 - 0, "Hash\t\t");
-    let mut pack = Pack::new(170, 200, 150, 450 - 45, None);
+    let grp3 = Group::new(10, 35, 700 - 20, 450 - 0, "Hash\t\t");
+    let mut pack = Pack::new(275, 200, 150, 450 - 45, None);
     pack.set_spacing(10);
     let mut hash_file = Button::default()
         .with_size(80, 30)
@@ -312,7 +312,7 @@ fn draw_gallery() -> Result<()> {
     pack.end();
     grp3.end();
 
-    let grp4 = Group::new(10, 35, 500 - 20, 450 - 0, "FAQ\t\t");
+    let grp4 = Group::new(10, 35, 700 - 20, 450 - 0, "FAQ\t\t");
     let mut buf = text::TextBuffer::default();
     let mut txt = text::TextDisplay::default().with_size(390, 275).center_of_parent();
     txt.set_buffer(buf.clone());
@@ -335,7 +335,7 @@ fn main() -> Result<()> {
     widget_theme.apply();
 
     let mut wind = Window::default()
-        .with_size(500, 450)
+        .with_size(700, 450)
         .with_label("crypto_rs")
         .center_screen();
 
