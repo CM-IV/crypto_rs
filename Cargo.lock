@@ -229,6 +229,7 @@ dependencies = [
  "camino",
  "dirs",
  "fltk",
+ "fltk-theme",
  "hmac-sha512",
  "rand 0.8.5",
 ]
@@ -340,6 +341,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc68abc20638629c01ebe0dad72d44aff3d01e91e222884791804b14484f2a50"
 dependencies = [
  "cmake",
+]
+
+[[package]]
+name = "fltk-theme"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31a35af4e0ef3c362684219328cdb60459b3b916b9c9e57750b2c7ad6bd6b61f"
+dependencies = [
+ "fltk",
+ "lazy_static",
 ]
 
 [[package]]

@@ -6,10 +6,11 @@ use fltk::{
     app,
     button::*,
     group::{Group, Pack, Tabs, self},
-    prelude::{GroupExt, WidgetBase, WidgetExt, WindowExt, InputExt},
-    window::Window, dialog, frame, input, output, enums::{FrameType, Color}
+    prelude::{GroupExt, WidgetBase, WidgetExt, WindowExt, InputExt, DisplayExt},
+    window::Window, dialog, frame, input, output, enums::{FrameType, Color}, text
 };
 use anyhow::Result;
+use fltk_theme::{WidgetTheme, ThemeType, widget_themes};
 use rand::{distributions::Uniform, prelude::Distribution};
 
 const WORDLIST: &str = include_str!("./assets/wordlist.txt");
@@ -19,19 +20,20 @@ pub struct MyDialog {
     out: output::Output,
 }
 
-impl Default for MyDialog {
-    fn default() -> Self {
+impl MyDialog {
+    fn pass_dialog(val: String) -> Self {
         let mut win = Window::default()
-            .with_size(500, 100)
+            .with_size(600, 100)
             .with_label("Success!");
         win.set_color(Color::from_rgb(240, 240, 240));
-        frame::Frame::default().with_label("Write down your password!").with_pos(140, 20);
+        frame::Frame::default().with_label("Save this password").with_pos(170, 20);
         let mut pack = group::Pack::default()
             .with_size(400, 30)
             .center_of_parent()
             .with_type(group::PackType::Horizontal);
         pack.set_spacing(20);
-        let mut out = output::Output::default().with_size(300, 0);
+        let mut out = output::Output::default().with_size(350, 0);
+        out.set_value(&val);
         out.set_frame(FrameType::FlatBox);
         let mut ok = Button::default().with_size(80, 0).with_label("Ok");
         pack.end();
@@ -49,10 +51,7 @@ impl Default for MyDialog {
         }
         Self { out }
     }
-}
-
-impl MyDialog {
-    pub fn txt_dialog(val: String) -> Self {
+    fn hash_dialog(val: String) -> Self {
         let mut win = Window::default()
             .with_size(600, 100)
             .with_label("Success!");
@@ -160,7 +159,7 @@ fn encrypt_file(file: &Utf8PathBuf, pass: String) -> Result<()> {
 
     match writer.write_all(encrypted.as_slice()) {
         Ok(_) => {
-            MyDialog::txt_dialog(cloned_pass);
+            MyDialog::pass_dialog(cloned_pass);
         },
         Err(_) => {
             dialog::alert_default("There was an error!");
@@ -236,7 +235,7 @@ fn gen_file_hash(file: &Utf8PathBuf) -> Result<()> {
     let hex_chars: Vec<String> = hash_bytes.iter().map(|byte| format!("{:02x}", byte)).collect();
     let hash_str = hex_chars.join("");
 
-    MyDialog::txt_dialog(hash_str);
+    MyDialog::hash_dialog(hash_str);
     
     Ok(())
 }
@@ -251,6 +250,8 @@ fn draw_gallery() -> Result<()> {
         .with_size(80, 30)
         .with_label("Select file");
 
+    btn.set_frame(widget_themes::OS_DEFAULT_BUTTON_UP_BOX);
+
     btn.set_callback(|_| {
         if let Some(file) = get_file() {
             let pass = gen_password();
@@ -263,7 +264,7 @@ fn draw_gallery() -> Result<()> {
     pack.end();
     grp1.end();
 
-    let grp2 = Group::new(10, 35, 500 - 30, 450 - 25, "Decrypt\t\t");
+    let grp2 = Group::new(10, 35, 500 - 20, 450 - 25, "Decrypt\t\t");
     let mut pack = Pack::new(120, 150, 250, 450 - 45, None);
     pack.set_spacing(10);
     let flex = group::Flex::default().with_size(150, 100).column().center_of_parent();
@@ -273,6 +274,8 @@ fn draw_gallery() -> Result<()> {
     let mut picker = Button::default()
         .with_size(80, 30)
         .with_label("Select file");
+
+    picker.set_frame(widget_themes::OS_DEFAULT_BUTTON_UP_BOX);
 
     picker.set_callback(move |_| {
         if let Some(file) = get_age_file() {
@@ -288,12 +291,14 @@ fn draw_gallery() -> Result<()> {
     pack.end();
     grp2.end();
 
-    let grp3 = Group::new(10, 35, 500 - 40, 450 - 0, "Hash\t\t");
+    let grp3 = Group::new(10, 35, 500 - 20, 450 - 0, "Hash\t\t");
     let mut pack = Pack::new(170, 200, 150, 450 - 45, None);
     pack.set_spacing(10);
     let mut hash_file = Button::default()
         .with_size(80, 30)
         .with_label("Select file");
+
+    hash_file.set_frame(widget_themes::OS_DEFAULT_BUTTON_UP_BOX);
 
     hash_file.set_callback(|_| {
         if let Some(file) = get_file() {
@@ -307,7 +312,16 @@ fn draw_gallery() -> Result<()> {
     pack.end();
     grp3.end();
 
-    let grp4 = Group::new(10, 35, 500 - 40, 450 - 0, "FAQ\t\t");
+    let grp4 = Group::new(10, 35, 500 - 20, 450 - 0, "FAQ\t\t");
+    let mut buf = text::TextBuffer::default();
+    let mut txt = text::TextDisplay::default().with_size(390, 275).center_of_parent();
+    txt.set_buffer(buf.clone());
+    buf.append("Q: How do I encrypt a file?");
+    buf.append("\nA: Use the file selector in the 'Encrypt' tab to select a file, once it is selected an encrypted file is written to /Downloads\n");
+    buf.append("\nQ: How do I decrypt a file?");
+    buf.append("\nA: Go to the 'Decrypt' tab and enter the generated password that was shown to you after encryption. Select the '.age' file that needs decrypted.\n");
+    buf.append("\nQ: How can I use the file hash feature?");
+    buf.append("\nA: Go to the 'Hash' tab and pick the file you'd like to get a SHA-512 hash of before encryption.  You can later decrypt that file and get the hash again to compare the two.");
     grp4.end();
     tab.end();
 
@@ -316,7 +330,9 @@ fn draw_gallery() -> Result<()> {
 
 fn main() -> Result<()> {
     let app = app::App::default().with_scheme(app::Scheme::Gtk);
-    app::background(221, 221, 221);
+
+    let widget_theme = WidgetTheme::new(ThemeType::Classic);
+    widget_theme.apply();
 
     let mut wind = Window::default()
         .with_size(500, 450)

@@ -13,6 +13,7 @@ rand = "0.8.5"
 hmac-sha512 = "1.1.5"
 fltk = { version = "1.4.5", features = ["fltk-bundled"] }
 camino = "1.1.4"
+fltk-theme = "0.7.0"
 
 
 # optimize for size
