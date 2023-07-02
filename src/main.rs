@@ -16,9 +16,9 @@ use fltk::{
     input,
     prelude::{DisplayExt, GroupExt, InputExt, WidgetBase, WidgetExt, WindowExt},
     text,
-    window::Window,
+    window::Window
 };
-use fltk_theme::{widget_themes, ThemeType, WidgetTheme};
+use fltk_theme::{widget_themes, WidgetScheme, WidgetTheme, ThemeType};
 use rand::{distributions::Uniform, prelude::Distribution};
 
 mod dialogs;
@@ -34,8 +34,14 @@ impl CryptoRS {
     fn new() -> Self {
         let app = app::App::default().with_scheme(app::Scheme::Gtk);
 
-        let widget_theme = WidgetTheme::new(ThemeType::Classic);
+        // let color_theme = ColorTheme::new(color_themes::DARK_THEME);
+        // color_theme.apply();
+
+        let widget_theme = WidgetTheme::new(ThemeType::Dark);
         widget_theme.apply();
+
+        let widget_scheme = WidgetScheme::new(fltk_theme::SchemeType::SvgBased);
+        widget_scheme.apply();
 
         let mut window = Window::default()
             .with_size(700, 450)
@@ -54,7 +60,8 @@ impl CryptoRS {
     fn draw_gallery() {
         // vv Draw the interface vv
     
-        let tab = Tabs::new(10, 10, 700 - 20, 450 - 20, "");
+        let mut tab = Tabs::new(10, 10, 700 - 20, 450 - 20, "");
+        tab.set_frame(widget_themes::OS_TABS_BOX);
     
         let grp1 = Group::new(10, 35, 700 - 20, 450 - 45, "Encrypt\t\t");
     
@@ -87,6 +94,7 @@ impl CryptoRS {
             .center_of_parent();
         frame::Frame::default().with_label("Enter password");
         let mut input = input::SecretInput::default();
+        input.set_frame(widget_themes::OS_INPUT_THIN_DOWN_BOX);
         flex.end();
         let mut picker = Button::default()
             .with_size(80, 30)
@@ -128,9 +136,10 @@ impl CryptoRS {
         grp3.end();
     
         let grp4 = Group::new(10, 35, 700 - 20, 450 - 0, "FAQ\t\t");
+
         let mut buf = text::TextBuffer::default();
         let mut txt = text::TextDisplay::default()
-            .with_size(390, 275)
+            .with_size(500, 275)
             .center_of_parent();
         txt.set_buffer(buf.clone());
         buf.append("Q: How do I encrypt a file?");
@@ -139,6 +148,15 @@ impl CryptoRS {
         buf.append("\nA: Go to the 'Decrypt' tab and enter the generated password that was shown to you after encryption. Select the '.age' file that needs decrypted.\n");
         buf.append("\nQ: How can I use the file hash feature?");
         buf.append("\nA: Go to the 'Hash' tab and pick the file you'd like to get a SHA-512 hash of before encryption.  You can later decrypt that file and get the hash again to compare the two.");
+        
+        let mut text = frame::Frame::default()
+            .with_size(200, 20)
+            .above_of(&txt, 30)
+            .with_label("crypto_rs\nCM-IV\n<chuck[at]civdev[dot]xyz>");
+
+        text.set_pos(250, 70);
+        text.set_label_size(12);
+
         grp4.end();
         tab.end();
     
@@ -147,6 +165,7 @@ impl CryptoRS {
 
     fn get_file() -> Option<Utf8PathBuf> {
         let mut dialog = dialog::NativeFileChooser::new(dialog::NativeFileChooserType::BrowseFile);
+        dialog.set_title("un-encrypted file");
         dialog.show();
         let binding = dialog.filename();
         let file = Utf8PathBuf::from_path_buf(binding).expect("couldn't get Utf8PathBuf of file");
@@ -155,6 +174,7 @@ impl CryptoRS {
 
     fn get_age_file() -> Option<Utf8PathBuf> {
         let mut dialog = dialog::NativeFileChooser::new(dialog::NativeFileChooserType::BrowseFile);
+        dialog.set_title("encrypted file");
         dialog.set_filter("*.{age}");
         dialog.show();
         let binding = dialog.filename();
