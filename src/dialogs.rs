@@ -1,11 +1,12 @@
 use fltk::{
     app,
     button::Button,
-    enums::{Color, FrameType},
+    enums::FrameType,
     frame, group, output,
     prelude::{GroupExt, InputExt, WidgetExt, WindowExt},
     window::Window,
 };
+use fltk_theme::{WidgetTheme, ThemeType, WidgetScheme};
 
 pub struct MyDialog {
     pub out: output::Output,
@@ -14,7 +15,14 @@ pub struct MyDialog {
 impl MyDialog {
     pub fn new(val: &str, title: &str, label: &str) -> Self {
         let mut win = Window::default().with_size(600, 100).with_label(title);
-        win.set_color(Color::from_rgb(240, 240, 240));
+
+        let widget_theme = WidgetTheme::new(ThemeType::Dark);
+        widget_theme.apply();
+
+        let widget_scheme = WidgetScheme::new(fltk_theme::SchemeType::SvgBased);
+        widget_scheme.apply();
+
+        // win.set_color(Color::from_rgb(240, 240, 240));
         frame::Frame::default().with_label(label).with_pos(170, 20);
         let mut pack = group::Pack::default()
             .with_size(400, 30)
