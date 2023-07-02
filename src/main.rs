@@ -1,12 +1,12 @@
-use owo_colors::OwoColorize;
 use anyhow::Result;
 use inquire::{
     ui::{Attributes, Color, RenderConfig, StyleSheet},
     Select,
 };
+use owo_colors::OwoColorize;
 
-pub mod cli;
-pub mod controllers;
+mod cli;
+mod controllers;
 
 fn get_render_cfg() -> RenderConfig<'static> {
     RenderConfig {
@@ -48,10 +48,10 @@ impl<'a> MainMenuBuilder<'a> {
             .prompt()?;
 
         let selected_item = match choice {
-                "File Operations" => MainMenuItem::FileOperations,
-                "Exit" => MainMenuItem::Exit,
-                _ => unreachable!(),
-            };
+            "File Operations" => MainMenuItem::FileOperations,
+            "Exit" => MainMenuItem::Exit,
+            _ => unreachable!(),
+        };
 
         Ok(selected_item)
     }
@@ -87,20 +87,16 @@ fn main() -> Result<()> {
     println!("File Encryption Software");
     println!("By CM-IV <chuck@civdev.xyz>\n");
 
-
     loop {
-        match MainMenuBuilder::new(&[
-            "File Operations",
-            "Exit",
-        ])
-        .with_help_message("Main menu")
-        .build()?
+        match MainMenuBuilder::new(&["File Operations", "Exit"])
+            .with_help_message("Main menu")
+            .build()?
         {
             MainMenuItem::FileOperations => cli::file_menu::file_operations()?,
             MainMenuItem::Exit => {
                 println!("{}", "\nGoodbye!\n".purple());
                 break;
-            },
+            }
         }
     }
 

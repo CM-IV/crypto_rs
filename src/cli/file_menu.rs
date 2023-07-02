@@ -1,16 +1,17 @@
 use anyhow::Result;
 use inquire::Select;
 
-
 use crate::controllers::encryption;
+use crate::controllers::hash;
 
 // Define an enum for file items
 enum FileMenuItem {
     Encrypt,
     Decrypt,
-    GoBack
+    Hash,
+    Compare,
+    GoBack,
 }
-
 
 struct FileMenuBuilder<'a> {
     items: &'a [&'a str],
@@ -35,12 +36,14 @@ impl<'a> FileMenuBuilder<'a> {
             "Which file operation would you like to perform?",
             self.items.to_vec(),
         )
-            .with_help_message(self.help_message.unwrap_or_default())
-            .prompt()?;
+        .with_help_message(self.help_message.unwrap_or_default())
+        .prompt()?;
 
         let selected_item = match choice {
             "Encrypt a file" => FileMenuItem::Encrypt,
             "Decrypt a file" => FileMenuItem::Decrypt,
+            "Get file hash" => FileMenuItem::Hash,
+            "Compare hashes" => FileMenuItem::Compare,
             "Go back" => FileMenuItem::GoBack,
             _ => unreachable!(),
         };
@@ -49,12 +52,13 @@ impl<'a> FileMenuBuilder<'a> {
     }
 }
 
-
 pub fn file_operations() -> Result<()> {
     loop {
         match FileMenuBuilder::new(&[
             "Encrypt a file",
             "Decrypt a file",
+            "Get file hash",
+            "Compare hashes",
             "Go back",
         ])
         .with_help_message("File menu")
@@ -62,11 +66,13 @@ pub fn file_operations() -> Result<()> {
         {
             FileMenuItem::Encrypt => encryption::encrypt_file()?,
             FileMenuItem::Decrypt => encryption::decrypt_file()?,
+            FileMenuItem::Hash => hash::hash_file()?,
+            FileMenuItem::Compare => hash::compare_hashes()?,
             FileMenuItem::GoBack => {
                 break;
-            },
+            }
         }
     }
-    
+
     Ok(())
 }
