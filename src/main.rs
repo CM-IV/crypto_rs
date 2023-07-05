@@ -261,7 +261,11 @@ impl CryptoRS {
 
             if let Ok(mut reader) = decryptor.decrypt(&Secret::new(pass), None) {
                 reader.read_to_end(&mut decrypted)?;
+                dialog::message_title("Success!");
+                dialog::message_default("Your file was decrypted!");
             } else {
+                dialog::message_title("Error!");
+                dialog::alert_default("Your password is incorrect!");
                 return Ok(());
             };
 
@@ -277,17 +281,8 @@ impl CryptoRS {
 
         let mut writer = File::create(dest)?;
 
-        match writer.write_all(decrypted.as_slice()) {
-            Ok(_) => {
-                dialog::message_title("Success!");
-                dialog::message_default("Your file was decrypted!");
-            }
-            Err(_) => {
-                dialog::message_title("Error!");
-                dialog::alert_default("There was an error!");
-                return Ok(());
-            }
-        };
+        writer.write_all(decrypted.as_slice())?;
+
 
         Ok(())
     }
