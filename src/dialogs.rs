@@ -6,7 +6,7 @@ use fltk::{
     prelude::{GroupExt, InputExt, WidgetExt, WindowExt},
     window::Window,
 };
-use fltk_theme::{WidgetTheme, ThemeType, WidgetScheme};
+use fltk_theme::{ThemeType, WidgetScheme, WidgetTheme};
 
 pub struct MyDialog {
     pub out: output::Output,
@@ -14,7 +14,7 @@ pub struct MyDialog {
 
 impl MyDialog {
     pub fn new(val: &str, title: &str, label: &str) -> Self {
-        let mut win = Window::default().with_size(600, 100).with_label(title);
+        let mut win = Window::default().with_size(750, 100).with_label(title);
 
         let widget_theme = WidgetTheme::new(ThemeType::Dark);
         widget_theme.apply();
@@ -25,18 +25,25 @@ impl MyDialog {
         // win.set_color(Color::from_rgb(240, 240, 240));
         frame::Frame::default().with_label(label).with_pos(170, 20);
         let mut pack = group::Pack::default()
-            .with_size(400, 30)
+            .with_size(550, 30)
             .center_of_parent()
             .with_type(group::PackType::Horizontal);
         pack.set_spacing(20);
-        let mut out = output::Output::default().with_size(350, 0);
-        out.set_value(&val);
+        let mut out = output::Output::default().with_size(400, 0);
+        out.set_value(val);
         out.set_frame(FrameType::FlatBox);
+        let mut copy = Button::default().with_size(80, 0).with_label("Copy");
         let mut ok = Button::default().with_size(80, 0).with_label("Ok");
         pack.end();
         win.end();
         win.make_modal(true);
         win.show();
+        copy.set_callback({
+            let out_val = out.value();
+            move |_| {
+                app::copy(out_val.as_str());
+            }
+        });
         ok.set_callback({
             let mut win = win.clone();
             move |_| {
