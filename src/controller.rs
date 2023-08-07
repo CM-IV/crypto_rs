@@ -1,11 +1,12 @@
 use std::{
-    fs::File,
-    io::{BufReader, Read, Write},
+    fs::{File, self},
+    io::{BufReader, Read, Write, self}, path::PathBuf,
 };
 
 use age::{secrecy::Secret, DecryptError};
 use anyhow::Result;
 use camino::Utf8PathBuf;
+use flate2::{write::GzEncoder, Compression};
 use fltk::{
     app,
     button::*,
@@ -141,17 +142,27 @@ impl CryptoRS {
     }
 
     fn handle_btn_callback() {
-        if let Some(file) = Self::get_file() {
-            let pass = Self::gen_password();
-            if let Err(error) = Self::encrypt_file(&file, pass.as_str()) {
-                // Check for custom error enum here, not using age::EncryptError
-                if let Some(custom_error) = error.downcast_ref::<EncryptionError>() {
-                    dialog::message_title("Error!");
-                    dialog::alert_default(&custom_error.to_string());
+        if let Some(files) = Self::get_files() {
+
+            match Self::compress_files(files) {
+                Ok(file_buf) => {
+                    let pass = Self::gen_password();
+                    if let Err(error) = Self::encrypt_file(file_buf, pass.as_str()) {
+                        dialog::message_title("Error!");
+                        dialog::alert_default(&error.to_string());
+
+                        return;
+                    };
+                    MyDialog::new(&pass, "Success!", "Save this password:");
+                },
+                Err(error) => {
+                    // Check for custom error enum here, not using age::EncryptError
+                    if let Some(custom_error) = error.downcast_ref::<EncryptionError>() {
+                        dialog::message_title("Error!");
+                        dialog::alert_default(&custom_error.to_string());
+                    }
                 }
-            } else {
-                MyDialog::new(&pass, "Success!", "Save this password:");
-            }
+            };
         }
     }
 
@@ -185,6 +196,19 @@ impl CryptoRS {
         let binding = dialog.filename();
         let file = Utf8PathBuf::from_path_buf(binding).expect("couldn't get Utf8PathBuf of file");
         Some(file)
+    }
+
+    fn get_files() -> Option<Vec<PathBuf>> {
+        let mut dialog = dialog::NativeFileChooser::new(dialog::NativeFileChooserType::BrowseMultiFile);
+        dialog.set_title("multiple un-encrypted files");
+        dialog.show();
+        let binding = dialog.filenames();
+
+        if binding.len() == 0 {
+            return None;
+        }
+        
+        Some(binding)
     }
 
     fn get_age_file() -> Option<Utf8PathBuf> {
@@ -221,11 +245,13 @@ impl CryptoRS {
         password
     }
 
-    fn encrypt_file(file: &Utf8PathBuf, pass: &str) -> Result<()> {
-        let encrypted = {
-            let encryptor = age::Encryptor::with_user_passphrase(Secret::new(pass.to_owned()));
+    fn compress_files(files: Vec<PathBuf>) -> Result<Vec<u8>> {
 
-            let path = file.as_path();
+        let mut ar = tar::Builder::new(Vec::with_capacity(files.len()));
+
+        let mut file_name = String::new();
+
+        for path in files {
 
             if let Some(ext) = path.extension() {
                 if ext == "age" {
@@ -233,11 +259,28 @@ impl CryptoRS {
                 }
             }
 
-            let f = File::open(path)?;
+            let utf8_pathbuf = Utf8PathBuf::from_path_buf(path).unwrap();
 
-            let mut reader = BufReader::new(f);
-            let mut buffer = Vec::new();
-            reader.read_to_end(&mut buffer)?;
+            let mut input_file = File::open(utf8_pathbuf.as_path()).unwrap();
+
+            file_name.push_str(utf8_pathbuf.file_name().unwrap());
+
+            ar.append_file(utf8_pathbuf.file_name().unwrap(), &mut input_file).unwrap();
+        }
+
+        let tar_data = ar.get_ref().to_owned();
+
+        let mut gz_encoder = GzEncoder::new(Vec::with_capacity(tar_data.len()), Compression::default());
+        gz_encoder.write_all(&tar_data).unwrap();
+        
+        let gz_data = gz_encoder.finish().unwrap();
+
+        Ok(gz_data)
+    }
+
+    fn encrypt_file(buffer: Vec<u8>, pass: &str) -> Result<()> {
+        let encrypted = {
+            let encryptor = age::Encryptor::with_user_passphrase(Secret::new(pass.to_owned()));
 
             let mut encrypted = vec![];
             let mut writer = encryptor.wrap_output(&mut encrypted)?;
@@ -249,13 +292,22 @@ impl CryptoRS {
 
         let dir = dirs::download_dir().expect("Couldn't get downloads dir!");
 
-        if let Some(out_file) = file.file_name() {
-            let dest = format!("{}/{}.age", dir.display(), out_file);
+        let dest = format!("{}/data.tar.gz.age", dir.display());
 
-            let mut writer = File::create(dest)?;
-
-            writer.write_all(encrypted.as_slice())?;
+        // Check if the file already exists
+        if let Ok(metadata) = fs::metadata(&dest) {
+            if metadata.is_file() {
+                return Err(io::Error::new(
+                    io::ErrorKind::AlreadyExists,
+                    format!("File {} already exists!", dest),
+                )
+                .into());
+            }
         }
+
+        let mut writer = File::create(dest)?;
+
+        writer.write_all(encrypted.as_slice())?;
 
         Ok(())
     }
