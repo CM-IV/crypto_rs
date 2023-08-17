@@ -249,8 +249,6 @@ impl CryptoRS {
 
         let mut ar = tar::Builder::new(Vec::with_capacity(files.len()));
 
-        let mut file_name = String::new();
-
         for path in files {
 
             if let Some(ext) = path.extension() {
@@ -262,8 +260,6 @@ impl CryptoRS {
             let utf8_pathbuf = Utf8PathBuf::from_path_buf(path).unwrap();
 
             let mut input_file = File::open(utf8_pathbuf.as_path()).unwrap();
-
-            file_name.push_str(utf8_pathbuf.file_name().unwrap());
 
             ar.append_file(utf8_pathbuf.file_name().unwrap(), &mut input_file).unwrap();
         }
