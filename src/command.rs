@@ -1,9 +1,10 @@
-use std::{fs::File, io::{BufReader, Read, Write}};
+use std::{fs::File, io::{BufReader, Read, Write}, str::FromStr};
 use camino::Utf8PathBuf;
 
-use age::{secrecy::Secret, DecryptError};
+use age::{secrecy::{Secret, SecretString}, DecryptError};
 use clap::{Parser, Subcommand};
 use anyhow::Result;
+use comfy_table::{Table, presets::UTF8_FULL, modifiers::UTF8_ROUND_CORNERS, ContentArrangement};
 use owo_colors::OwoColorize;
 use rand::{distributions::Uniform, prelude::Distribution};
 
@@ -72,18 +73,12 @@ impl CryptoRS {
                 }
             });
 
-        println!(
-            "\n{}{}\n",
-            "Your generated password is: ".yellow(),
-            &password.yellow()
-        );
-
         Ok(password)
     }
     fn encrypt_file(file: &Utf8PathBuf, pass: String) -> Result<()> {
 
         let encrypted = {
-            let encryptor = age::Encryptor::with_user_passphrase(Secret::new(pass));
+            let encryptor = age::Encryptor::with_user_passphrase(SecretString::from_str(pass.as_str()).unwrap());
 
             let f = File::open(file.as_path())?;
 
@@ -91,7 +86,7 @@ impl CryptoRS {
             let mut buffer = Vec::new();
             reader.read_to_end(&mut buffer)?;
 
-            println!("{}", "Encrypting...".yellow());
+            println!("\n{}\n", "Encrypting...".yellow());
 
             let mut encrypted = vec![];
             let mut writer = encryptor.wrap_output(&mut encrypted)?;
@@ -112,7 +107,18 @@ impl CryptoRS {
 
         writer.write_all(encrypted.as_slice())?;
 
-        println!("{}", "\nFile successfully encrypted!\n".green());
+        let mut table = Table::new();
+
+        table
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS)
+        .set_content_arrangement(ContentArrangement::Dynamic)
+        .set_header(vec!["Your Password"])
+        .add_row(vec![pass]);
+
+        println!("{}", table.green());
+
+        println!("\n{}\n", "Done!".green());
 
         Ok(())
     }
@@ -176,7 +182,16 @@ impl CryptoRS {
         let hex_chars: Vec<String> = hash_bytes.iter().map(|byte| format!("{:02x}", byte)).collect();
         let hash_str = hex_chars.join("");
 
-        println!("\nSHA512: {}", hash_str.green());
+        let mut table = Table::new();
+
+        table
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS)
+        .set_content_arrangement(ContentArrangement::Dynamic)
+        .set_header(vec!["SHA512 Hash"])
+        .add_row(vec![hash_str]);
+
+        println!("{}", table.green());
         
         Ok(())
     }
