@@ -11,7 +11,7 @@ anyhow = "1.0.75"
 dirs = "5.0.1"
 owo-colors = "3.5.0"
 rand = "0.8.5"
-clap = { version = "4.4.2", features = ["derive"] }
+clap = { version = "4.4.6", features = ["derive"] }
 camino = "1.1.6"
 hmac-sha512 = "1.1.5"
 comfy-table = "7.0.1"

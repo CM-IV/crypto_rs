@@ -51,7 +51,6 @@ enum Command {
 
 impl CryptoRS {
     fn generate_password() -> Result<String> {
-
         // Algorithm to generate random password phrase
 
         let mut rng = rand::thread_rng();
@@ -59,19 +58,9 @@ impl CryptoRS {
         let between = Uniform::from(0..2048);
 
         let password: String = (0..PASSWORD_LEN)
-            .map(|_| {
-                WORDLIST
-                    .lines()
-                    .nth(between.sample(&mut rng))
-                    .expect("index in range")
-            })
-            .fold(String::new(), |acc, p| {
-                if acc.is_empty() {
-                    acc + p
-                } else {
-                    acc + "-" + p
-                }
-            });
+            .map(|_| WORDLIST.lines().nth(between.sample(&mut rng)).expect("index in range"))
+            .collect::<Vec<_>>()
+            .join("-");
 
         Ok(password)
     }
@@ -110,11 +99,11 @@ impl CryptoRS {
         let mut table = Table::new();
 
         table
-        .load_preset(UTF8_FULL)
-        .apply_modifier(UTF8_ROUND_CORNERS)
-        .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec!["Your Password"])
-        .add_row(vec![pass]);
+            .load_preset(UTF8_FULL)
+            .apply_modifier(UTF8_ROUND_CORNERS)
+            .set_content_arrangement(ContentArrangement::Dynamic)
+            .set_header(vec!["Your Password"])
+            .add_row(vec![pass]);
 
         println!("{}", table.green());
 
@@ -133,7 +122,7 @@ impl CryptoRS {
         let decrypted = {
             let decryptor = match age::Decryptor::new_buffered(&buffer[..])? {
                 age::Decryptor::Passphrase(d) => d,
-                _ => unreachable!(),
+                _ => return Ok(()),
             };
     
             let mut decrypted = vec![];
@@ -185,11 +174,11 @@ impl CryptoRS {
         let mut table = Table::new();
 
         table
-        .load_preset(UTF8_FULL)
-        .apply_modifier(UTF8_ROUND_CORNERS)
-        .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec!["SHA512 Hash"])
-        .add_row(vec![hash_str]);
+            .load_preset(UTF8_FULL)
+            .apply_modifier(UTF8_ROUND_CORNERS)
+            .set_content_arrangement(ContentArrangement::Dynamic)
+            .set_header(vec!["SHA512 Hash"])
+            .add_row(vec![hash_str]);
 
         println!("{}", table.green());
         
