@@ -204,19 +204,9 @@ impl CryptoRS {
         let between = Uniform::from(0..2048);
 
         let password: String = (0..PASSWORD_LEN)
-            .map(|_| {
-                WORDLIST
-                    .lines()
-                    .nth(between.sample(&mut rng))
-                    .expect("index in range")
-            })
-            .fold(String::new(), |acc, p| {
-                if acc.is_empty() {
-                    acc + p
-                } else {
-                    acc + "-" + p
-                }
-            });
+            .map(|_| WORDLIST.lines().nth(between.sample(&mut rng)).expect("index in range"))
+            .collect::<Vec<_>>()
+            .join("-");
 
         password
     }

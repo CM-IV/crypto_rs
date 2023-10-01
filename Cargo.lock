@@ -59,9 +59,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.72"
+version = "1.0.75"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b13c32d80ecc7ab747b80c3784bce54ee8a7a0cc4fbda9bf4cda2cf6fe90854"
+checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 
 [[package]]
 name = "arc-swap"
@@ -324,9 +324,9 @@ dependencies = [
 
 [[package]]
 name = "fltk"
-version = "1.4.9"
+version = "1.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a352b5e5bc5eba9f95a87385466f62edf2c956463c0251ca1bcfbbcce6ed7530"
+checksum = "5bf66f25cd4ebfcbe87fcac1f2f00fa782dc2466246d9e3e1d3c58974182816c"
 dependencies = [
  "bitflags 2.3.2",
  "crossbeam-channel",
@@ -337,11 +337,10 @@ dependencies = [
 
 [[package]]
 name = "fltk-sys"
-version = "1.4.9"
+version = "1.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68748e73e3a006db0a154617eae61bbef6543786e8e03493584d520b8a387f0e"
+checksum = "367668668c3fc86f1320657a1f7ab28bb7a9a310e7516ace118978747d3c5af3"
 dependencies = [
- "cc",
  "cmake",
 ]
 
@@ -1031,18 +1030,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.44"
+version = "1.0.49"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "611040a08a0439f8248d1990b111c95baa9c704c805fa1f62104b39655fd7f90"
+checksum = "1177e8c6d7ede7afde3585fd2513e611227efd6481bd78d2e82ba1ce16557ed4"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.44"
+version = "1.0.49"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "090198534930841fab3a5d1bb637cde49e339654e606195f8d9c76eeb081dc96"
+checksum = "10712f02019e9288794769fba95cd6847df9874d49d871d062172f9dd41bc4cc"
 dependencies = [
  "proc-macro2",
  "quote",
