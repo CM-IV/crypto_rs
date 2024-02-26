@@ -1,11 +1,9 @@
 use std::{
-    fs::File,
-    io::{BufReader, Read},
+    cmp::Ordering, fs::File, io::{BufReader, Read}
 };
 
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use constant_time_eq::constant_time_eq;
 use inquire::required;
 use owo_colors::OwoColorize;
 
@@ -16,21 +14,26 @@ pub fn hash_file() -> Result<()> {
         .prompt()?
         .into();
 
-    let f = File::open(file.as_path())?;
+    match File::open(file.as_path()) {
+        Ok(f) => {
+            let mut reader = BufReader::new(f);
+            let mut buffer = Vec::new();
+            reader.read_to_end(&mut buffer)?;
 
-    let mut reader = BufReader::new(f);
-    let mut buffer = Vec::new();
-    reader.read_to_end(&mut buffer)?;
+            let hash_bytes = hmac_sha512::Hash::hash(buffer.as_slice());
 
-    let hash_bytes = hmac_sha512::Hash::hash(buffer.as_slice());
+            let hex_chars: Vec<String> = hash_bytes
+                .iter()
+                .map(|byte| format!("{:02x}", byte))
+                .collect();
+            let hash_str = hex_chars.join("");
 
-    let hex_chars: Vec<String> = hash_bytes
-        .iter()
-        .map(|byte| format!("{:02x}", byte))
-        .collect();
-    let hash_str = hex_chars.join("");
-
-    println!("\nSHA512: {}\n", hash_str.green());
+            println!("\nSHA512: {}\n", hash_str.green());
+        },
+        Err(error) => {
+            println!("\nThere was an error: {}\n", error);
+        }
+    };
 
     Ok(())
 }
@@ -67,12 +70,14 @@ pub fn compare_hashes() -> Result<()> {
 
     let dest2 = hash2.as_bytes();
 
-    if constant_time_eq(dest1, dest2) {
-        println!("{}", "\nThe hashes match, everything looks good\n".green());
-        return Ok(());
-    }
+    match dest1.cmp(&dest2) {
+        Ordering::Equal => {
+            println!("{}", "\nThe hashes match, everything looks good\n".green());
+        }
+        _ => {
+            println!("{}", "\nThe hashes do not match!\n".red());
+        }
+    };
 
-    println!("{}", "\nThe hashes do not match!\n".red());
-    
     Ok(())
 }

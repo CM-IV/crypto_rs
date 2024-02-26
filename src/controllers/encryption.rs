@@ -36,7 +36,7 @@ pub fn encrypt_file() -> Result<()> {
     if password.is_empty() {
         let mut rng = rand::thread_rng();
 
-        let between = Uniform::from(0..2048);
+        let between = Uniform::from(0..7775);
 
         password = (0..PASSWORD_LEN)
             .map(|_| {
