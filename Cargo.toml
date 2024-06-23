@@ -7,19 +7,18 @@ edition = "2021"
 
 [dependencies]
 age = "0.10.0"
-anyhow = "1.0.81"
 dirs = "5.0.1"
 rand = "0.8.5"
 hmac-sha512 = "1.1.5"
-fltk = "1.4.26"
-camino = "1.1.6"
+fltk = "1.4.32"
+camino = "1.1.7"
 fltk-theme = "0.7.2"
-thiserror = "1.0.58"
+thiserror = "1.0.61"
+fl2rust-macro = "0.5.19"
 
 
 # optimize for size
 [profile.release]
-strip = true
 lto = true
 opt-level = "z"
 debug = 0

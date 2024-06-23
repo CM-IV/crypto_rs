@@ -6,7 +6,7 @@ use fltk::{
     prelude::{GroupExt, InputExt, WidgetExt, WindowExt},
     window::Window,
 };
-use fltk_theme::{ThemeType, WidgetScheme, WidgetTheme};
+use fltk_theme::WidgetScheme;
 
 pub struct MyDialog {
     pub out: output::Output,
@@ -16,10 +16,7 @@ impl MyDialog {
     pub fn new(val: &str, title: &str, label: &str) -> Self {
         let mut win = Window::default().with_size(750, 100).with_label(title);
 
-        let widget_theme = WidgetTheme::new(ThemeType::Dark);
-        widget_theme.apply();
-
-        let widget_scheme = WidgetScheme::new(fltk_theme::SchemeType::SvgBased);
+        let widget_scheme = WidgetScheme::new(fltk_theme::SchemeType::Fluent);
         widget_scheme.apply();
 
         // win.set_color(Color::from_rgb(240, 240, 240));

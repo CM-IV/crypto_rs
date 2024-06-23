@@ -1,0 +1,61 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0400
+header_name {.h}
+code_name {.cxx}
+class UserInterface {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window my_win {
+      label {Crypto RS} open selected
+      xywh {2769 2042 749 592} type Double labelcolor 7 resizable visible
+    } {
+      Fl_Tabs tab {open
+        xywh {13 11 723 574}
+      } {
+        Fl_Group grp1 {
+          label Encrypt open
+          xywh {15 35 721 545}
+        } {
+          Fl_Button btn1 {
+            label {Select File}
+            xywh {313 295 125 25}
+          }
+        }
+        Fl_Group grp2 {
+          label Decrypt open
+          xywh {15 35 720 550} hide
+        } {
+          Fl_Box label1 {
+            label {Enter Password}
+            xywh {320 263 125 27}
+          }
+          Fl_Button btn2 {
+            label {Select File}
+            xywh {318 330 125 25}
+          }
+          Fl_Input input1 {
+            xywh {250 295 275 25} type Secret
+          }
+        }
+        Fl_Group grp3 {
+          label Hash open
+          xywh {15 35 720 550} hide
+        } {
+          Fl_Button btn3 {
+            label {Select File}
+            xywh {323 305 125 25}
+          }
+        }
+        Fl_Group grp4 {
+          label FAQ open
+          xywh {15 35 720 550} hide
+        } {
+          Fl_Text_Display txt1 {
+            xywh {40 60 665 235}
+          }
+        }
+      }
+    }
+  }
+}
