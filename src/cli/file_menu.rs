@@ -1,10 +1,10 @@
 use anyhow::Result;
+use bon::builder;
 use inquire::Select;
 
 use crate::controllers::encryption;
 use crate::controllers::hash;
 
-// Define an enum for file items
 enum FileMenuItem {
     Encrypt,
     Decrypt,
@@ -13,56 +13,42 @@ enum FileMenuItem {
     GoBack,
 }
 
-struct FileMenuBuilder<'a> {
+#[builder]
+fn build_file_menu<'a>(
     items: &'a [&'a str],
     help_message: Option<&'a str>,
-}
+) -> Result<FileMenuItem> {
+    let choice = Select::new(
+        "Which file operation would you like to perform?",
+        items.to_vec(),
+    )
+    .with_help_message(help_message.unwrap_or_default())
+    .prompt()?;
 
-impl<'a> FileMenuBuilder<'a> {
-    fn new(items: &'a [&'a str]) -> Self {
-        Self {
-            items,
-            help_message: None,
-        }
-    }
+    let selected_item = match choice {
+        "Encrypt a file" => FileMenuItem::Encrypt,
+        "Decrypt a file" => FileMenuItem::Decrypt,
+        "Get file hash" => FileMenuItem::Hash,
+        "Compare hashes" => FileMenuItem::Compare,
+        "Go back" => FileMenuItem::GoBack,
+        _ => unreachable!(),
+    };
 
-    fn with_help_message(mut self, message: &'a str) -> Self {
-        self.help_message = Some(message);
-        self
-    }
-
-    fn build(self) -> Result<FileMenuItem> {
-        let choice = Select::new(
-            "Which file operation would you like to perform?",
-            self.items.to_vec(),
-        )
-        .with_help_message(self.help_message.unwrap_or_default())
-        .prompt()?;
-
-        let selected_item = match choice {
-            "Encrypt a file" => FileMenuItem::Encrypt,
-            "Decrypt a file" => FileMenuItem::Decrypt,
-            "Get file hash" => FileMenuItem::Hash,
-            "Compare hashes" => FileMenuItem::Compare,
-            "Go back" => FileMenuItem::GoBack,
-            _ => unreachable!(),
-        };
-
-        Ok(selected_item)
-    }
+    Ok(selected_item)
 }
 
 pub fn file_operations() -> Result<()> {
     loop {
-        match FileMenuBuilder::new(&[
-            "Encrypt a file",
-            "Decrypt a file",
-            "Get file hash",
-            "Compare hashes",
-            "Go back",
-        ])
-        .with_help_message("File menu")
-        .build()?
+        match build_file_menu()
+            .items(&[
+                "Encrypt a file",
+                "Decrypt a file",
+                "Get file hash",
+                "Compare hashes",
+                "Go back",
+            ])
+            .help_message("File menu")
+            .call()?
         {
             FileMenuItem::Encrypt => encryption::encrypt_file()?,
             FileMenuItem::Decrypt => encryption::decrypt_file()?,

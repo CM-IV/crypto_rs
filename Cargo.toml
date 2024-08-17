@@ -7,20 +7,21 @@ edition = "2021"
 
 [dependencies]
 age = "0.10.0"
-anyhow = "1.0.80"
-camino = "1.1.6"
+anyhow = "1.0.86"
+bon = "1.2.1"
+camino = "1.1.8"
 dirs = "5.0.1"
 hmac-sha512 = "1.1.5"
-inquire = "0.7.0"
+inquire = "0.7.5"
 owo-colors = "4.0.0"
 rand = "0.8.5"
-regex = "1.10.3"
+regex = "1.10.6"
 
 
 # optimize for size
 [profile.release]
 strip = true
-lto = true
+lto = "fat"
 opt-level = "z"
 debug = 0
 overflow-checks = false

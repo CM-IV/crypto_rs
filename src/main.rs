@@ -1,4 +1,5 @@
 use anyhow::Result;
+use bon::builder;
 use inquire::{
     ui::{Attributes, Color, RenderConfig, StyleSheet},
     Select,
@@ -18,43 +19,27 @@ fn get_render_cfg() -> RenderConfig<'static> {
     }
 }
 
-// Define an enum for menu items
 enum MainMenuItem {
     FileOperations,
     Exit,
 }
 
-struct MainMenuBuilder<'a> {
+#[builder]
+fn build_main_menu<'a>(
     items: &'a [&'a str],
     help_message: Option<&'a str>,
-}
+) -> Result<MainMenuItem> {
+    let choice = Select::new("What would you like to do?", items.to_vec())
+        .with_help_message(help_message.unwrap_or_default())
+        .prompt()?;
 
-impl<'a> MainMenuBuilder<'a> {
-    fn new(items: &'a [&'a str]) -> Self {
-        Self {
-            items,
-            help_message: None,
-        }
-    }
+    let selected_item = match choice {
+        "File Operations" => MainMenuItem::FileOperations,
+        "Exit" => MainMenuItem::Exit,
+        _ => unreachable!(),
+    };
 
-    fn with_help_message(mut self, message: &'a str) -> Self {
-        self.help_message = Some(message);
-        self
-    }
-
-    fn build(self) -> Result<MainMenuItem> {
-        let choice = Select::new("What would you like to do?", self.items.to_vec())
-            .with_help_message(self.help_message.unwrap_or_default())
-            .prompt()?;
-
-        let selected_item = match choice {
-            "File Operations" => MainMenuItem::FileOperations,
-            "Exit" => MainMenuItem::Exit,
-            _ => unreachable!(),
-        };
-
-        Ok(selected_item)
-    }
+    Ok(selected_item)
 }
 
 fn main() -> Result<()> {
@@ -74,13 +59,13 @@ fn main() -> Result<()> {
 |   '.'.____.'.'   |
 '.____'.____.'____.'LGB
 '.________________.'
-                         __                       
+                         __
   ____________  ______  / /_____        __________
  / ___/ ___/ / / / __ \/ __/ __ \______/ ___/ ___/
-/ /__/ /  / /_/ / /_/ / /_/ /_/ /_____/ /  (__  ) 
-\___/_/   \__, / .___/\__/\____/     /_/  /____/  
-         /____/_/                                 
-                                                                       
+/ /__/ /  / /_/ / /_/ / /_/ /_/ /_____/ /  (__  )
+\___/_/   \__, / .___/\__/\____/     /_/  /____/
+         /____/_/
+
     "#;
 
     println!("{}", greet.red());
@@ -88,9 +73,10 @@ fn main() -> Result<()> {
     println!("By CM-IV <chuck@civdev.xyz>\n");
 
     loop {
-        match MainMenuBuilder::new(&["File Operations", "Exit"])
-            .with_help_message("Main menu")
-            .build()?
+        match build_main_menu()
+            .items(&["File Operations", "Exit"])
+            .help_message("Main menu")
+            .call()?
         {
             MainMenuItem::FileOperations => cli::file_menu::file_operations()?,
             MainMenuItem::Exit => {
