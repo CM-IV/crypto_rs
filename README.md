@@ -18,4 +18,4 @@ You can use this functionality via the `hash` command in order to generate a has
 3. Run `RUSTFLAGS="-C target-cpu=native" cargo build --release` (or just `cargo build --release`)
 4. Your executable should be in the `/target/release` directory
 
-![image](https://github.com/CM-IV/crypto_rs/assets/44551614/9b1e4f81-61cb-41c1-8aaa-8e6ce935f6fb)
+<img width="782" height="303" alt="image" src="https://github.com/user-attachments/assets/4406781a-561c-45c4-b55b-4fc0c7ecadd4" />
