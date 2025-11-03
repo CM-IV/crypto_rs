@@ -6,15 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-age = "0.9.2"
-anyhow = "1.0.75"
-dirs = "5.0.1"
-owo-colors = "3.5.0"
-rand = "0.8.5"
-clap = { version = "4.4.6", features = ["derive"] }
-camino = "1.1.6"
-hmac-sha512 = "1.1.5"
-comfy-table = "7.0.1"
+age = "0.11.1"
+anyhow = "1.0.100"
+dirs = "6.0.0"
+owo-colors = "4.2.3"
+rand = "0.9.2"
+clap = { version = "4.5.51", features = ["derive"] }
+camino = "1.2.1"
+comfy-table = "7.2.1"
+blake3 = "1.8.2"
 
 
 # optimize for size

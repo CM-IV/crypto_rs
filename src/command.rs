@@ -1,12 +1,17 @@
-use std::{fs::File, io::{BufReader, Read, Write}, str::FromStr};
+use blake3::Hasher;
 use camino::Utf8PathBuf;
+use std::io::BufWriter;
+use std::{
+    fs::File,
+    io::{BufReader, Read, Write},
+};
 
-use age::{secrecy::{Secret, SecretString}, DecryptError};
-use clap::{Parser, Subcommand};
+use age::{secrecy::SecretString, DecryptError, Identity};
 use anyhow::Result;
-use comfy_table::{Table, presets::UTF8_FULL, modifiers::UTF8_ROUND_CORNERS, ContentArrangement};
+use clap::{Parser, Subcommand};
+use comfy_table::{modifiers::UTF8_ROUND_CORNERS, presets::UTF8_FULL, ContentArrangement, Table};
 use owo_colors::OwoColorize;
-use rand::{distributions::Uniform, prelude::Distribution};
+use rand::{distr::Uniform, prelude::Distribution};
 
 const WORDLIST: &str = include_str!("./assets/wordlist.txt");
 
@@ -31,7 +36,7 @@ enum Command {
     /// File encryption, a password is generated for you
     Encrypt {
         /// The path to the file
-        path: Utf8PathBuf
+        path: Utf8PathBuf,
     },
     /// File decryption, provide the generated password
     Decrypt {
@@ -40,64 +45,61 @@ enum Command {
         pass: String,
 
         /// The path to the file
-        path: Utf8PathBuf
+        path: Utf8PathBuf,
     },
-    /// Use SHA512 to generate a hash for the unencrypted file
+    /// Use Blake3 to generate a hash for the unencrypted file
     Hash {
-        /// The path to the file for SHA512 hash
-        path: Utf8PathBuf
-    }
+        /// The path to the file for Blake3 hash
+        path: Utf8PathBuf,
+    },
 }
 
 impl CryptoRS {
     fn generate_password() -> Result<String> {
         // Algorithm to generate random password phrase
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
-        let between = Uniform::from(0..2048);
+        let between = Uniform::new(0, 2047).expect("Uniform");
 
         let password: String = (0..PASSWORD_LEN)
-            .map(|_| WORDLIST.lines().nth(between.sample(&mut rng)).expect("index in range"))
+            .map(|_| {
+                WORDLIST
+                    .lines()
+                    .nth(between.sample(&mut rng))
+                    .expect("index in range")
+            })
             .collect::<Vec<_>>()
             .join("-");
 
         Ok(password)
     }
     fn encrypt_file(file: &Utf8PathBuf, pass: String) -> Result<()> {
-
-        let encrypted = {
-            let encryptor = age::Encryptor::with_user_passphrase(SecretString::from_str(pass.as_str()).unwrap());
-
-            let f = File::open(file.as_path())?;
-
-            let mut reader = BufReader::new(f);
-            let mut buffer = Vec::new();
-            reader.read_to_end(&mut buffer)?;
-
-            println!("\n{}\n", "Encrypting...".yellow());
-
-            let mut encrypted = vec![];
-            let mut writer = encryptor.wrap_output(&mut encrypted)?;
-            writer.write_all(&buffer)?;
-            writer.finish()?;
-
-            encrypted
-        };
-
+        let input_file = File::open(file)?;
         let dir = dirs::download_dir().expect("Couldn't get downloads dir!");
-        let dest = format!(
-            "{}/{}.age",
-            dir.display(),
-            file.file_name().unwrap()
-        );
+        let output_path = format!("{}/{}.age", dir.display(), file.file_name().unwrap());
+        let output_file = File::create(output_path)?;
 
-        let mut writer = File::create(dest)?;
+        println!("\n{}\n", "Encrypting...".yellow());
 
-        writer.write_all(encrypted.as_slice())?;
+        let encryptor = age::Encryptor::with_user_passphrase(SecretString::from(pass.as_str()));
+        let mut writer = encryptor.wrap_output(BufWriter::new(output_file))?;
+
+        // Use 64kb buffered reading
+        let mut reader = BufReader::with_capacity(64 * 1024, input_file);
+        let mut buffer = [0; 64 * 1024];
+
+        loop {
+            let bytes_read = reader.read(&mut buffer)?;
+            if bytes_read == 0 {
+                break;
+            }
+            writer.write_all(&buffer[..bytes_read])?;
+        }
+
+        writer.finish()?;
 
         let mut table = Table::new();
-
         table
             .load_preset(UTF8_FULL)
             .apply_modifier(UTF8_ROUND_CORNERS)
@@ -106,99 +108,93 @@ impl CryptoRS {
             .add_row(vec![pass]);
 
         println!("{}", table.green());
-
         println!("\n{}\n", "Done!".green());
 
         Ok(())
     }
     fn decrypt_file(file: &Utf8PathBuf, pass: String) -> Result<()> {
-    
-        let f = File::open(file.as_path())?;
-    
-        let mut reader = BufReader::new(f);
-        let mut buffer = Vec::new();
-        reader.read_to_end(&mut buffer)?;
-    
-        let decrypted = {
-            let decryptor = match age::Decryptor::new_buffered(&buffer[..])? {
-                age::Decryptor::Passphrase(d) => d,
-                _ => return Ok(()),
-            };
-    
-            let mut decrypted = vec![];
-
-            println!("{}", "\nDecrypting...".yellow());
-    
-            if let Ok(mut reader) = decryptor.decrypt(&Secret::new(pass), None) {
-                reader.read_to_end(&mut decrypted)?;
-            } else {
-                println!("{}", "\nYour password is incorrect!\n".red());
-                return Ok(());
-            };
-    
-            decrypted
-        };
-    
+        let input_file = File::open(file)?;
         let dir = dirs::download_dir().expect("Couldn't get downloads dir!");
-        let dest = format!(
+        let output_path = format!(
             "{}/{}",
             dir.display(),
-            file.file_name()
-                .unwrap()
-                .strip_suffix(".age")
-                .unwrap()
+            file.file_name().unwrap().strip_suffix(".age").unwrap()
         );
-    
-        let mut writer = File::create(dest)?;
-    
-        writer.write_all(&decrypted)?;
-    
+        let output_file = File::create(output_path)?;
+
+        println!("{}", "\nDecrypting...".yellow());
+
+        let decryptor = age::Decryptor::new(BufReader::with_capacity(64 * 1024, input_file))?;
+        let identity: Box<dyn Identity> = Box::new(age::scrypt::Identity::new(pass.into()));
+
+        let mut reader = decryptor.decrypt(std::iter::once(identity.as_ref()))?;
+        let mut writer = BufWriter::with_capacity(64 * 1024, output_file);
+        let mut buffer = [0; 64 * 1024];
+
+        loop {
+            let bytes_read = reader.read(&mut buffer)?;
+            if bytes_read == 0 {
+                break;
+            }
+            writer.write_all(&buffer[..bytes_read])?;
+        }
+
+        writer.flush()?;
+
         println!("{}", "\nFile successfully decrypted!\n".green());
-    
+
         Ok(())
     }
     fn gen_file_hash(file: &Utf8PathBuf) -> Result<()> {
-        let f = File::open(file.as_path())?;
-    
-        let mut reader = BufReader::new(f);
-        let mut buffer = Vec::new();
-        reader.read_to_end(&mut buffer)?;
+        println!("{}", "\nHashing...\n".yellow());
 
-        let slice = buffer.as_slice();
+        let f = File::open(file)?;
+        let mut reader = BufReader::with_capacity(64 * 1024, f);
 
-        let hash_bytes = hmac_sha512::Hash::hash(slice);
+        let mut hasher = Hasher::new();
+        let mut buffer = [0; 64 * 1024];
 
-        let hex_chars: Vec<String> = hash_bytes.iter().map(|byte| format!("{:02x}", byte)).collect();
-        let hash_str = hex_chars.join("");
+        loop {
+            let bytes_read = reader.read(&mut buffer)?;
+            if bytes_read == 0 {
+                break;
+            }
+            hasher.update(&buffer[..bytes_read]);
+        }
+
+        // BLAKE3 has built-in hex formatting
+        let hash_str = hasher.finalize().to_hex().to_string();
 
         let mut table = Table::new();
-
         table
             .load_preset(UTF8_FULL)
             .apply_modifier(UTF8_ROUND_CORNERS)
             .set_content_arrangement(ContentArrangement::Dynamic)
-            .set_header(vec!["SHA512 Hash"])
+            .set_header(vec!["BLAKE3 Hash"])
             .add_row(vec![hash_str]);
 
         println!("{}", table.green());
-        
+
         Ok(())
     }
+
     pub fn exec(self) -> Result<()> {
         match self.command {
             Command::Encrypt { path } => {
-
                 if !path.is_file() {
-                    println!("{}", "\nYou cannot use two commands at once and the path must lead to a file\n".red());
+                    println!(
+                        "{}",
+                        "\nYou cannot use two commands at once and the path must lead to a file\n"
+                            .red()
+                    );
                     return Ok(());
                 }
 
                 let generated_pass = Self::generate_password()?;
 
                 Self::encrypt_file(&path, generated_pass)?;
-            },
+            }
             Command::Decrypt { pass, path } => {
-
                 if !path.is_file() {
                     println!("{}", "\nYou cannot use two commands at once and the path must lead to a '.age' file\n".red());
                     return Ok(());
@@ -209,7 +205,7 @@ impl CryptoRS {
                 match result {
                     Ok(()) => {
                         return Ok(());
-                    },
+                    }
                     Err(err) => {
                         if err.downcast::<DecryptError>().is_ok() {
                             println!("{}", "\nAn error occured during decryption, is the file a valid '.age' file?\n".red());
@@ -217,18 +213,21 @@ impl CryptoRS {
                         }
                     }
                 }
-            },
+            }
             Command::Hash { path } => {
                 if !path.is_file() {
-                    println!("{}", "\nYou cannot use two commands at once and the path must lead to a file\n".red());
+                    println!(
+                        "{}",
+                        "\nYou cannot use two commands at once and the path must lead to a file\n"
+                            .red()
+                    );
                     return Ok(());
                 }
 
                 Self::gen_file_hash(&path)?;
-            },
+            }
         }
 
         Ok(())
-
     }
 }
