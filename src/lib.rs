@@ -12,6 +12,7 @@
 //! Commands:
 //!   encrypt  File encryption, a password is generated for you
 //!   decrypt  File decryption, provide the generated password
+//!   hash     Use Blake3 to generate a hash for the unencrypted file
 //!   help     Print this message or the help of the given subcommand(s)
 //!
 //! Options:
@@ -21,7 +22,7 @@
 //!   -V, --version
 //!           Print version
 //! ```
-//! 
+//!
 
 mod command;
 
